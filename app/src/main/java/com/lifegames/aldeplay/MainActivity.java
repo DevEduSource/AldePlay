@@ -1,59 +1,99 @@
 package com.lifegames.aldeplay;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
+import android.util.Log;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
-
-    private RecyclerView recycleMovie;
-    private RecyclerView recycleMovie2;
-    private MovieAdapter movieAdapter;
-    private MovieAdapter movieAdapter2;
-    private ArrayList<Movie> movies;
-    private ArrayList<Movie> movies2;
+    RecyclerView recycleMovieAcao;
+    RecyclerView recycleMovieAventura;
+    MovieAdapter movieAdapterAcao;
+    MovieAdapter movieAdapterAventura;
+    ArrayList<Movie> moviesAcao;
+    ArrayList<Movie> moviesAventura;
+    FirebaseFirestore db;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        recycleMovie = findViewById(R.id.recycleMovies);
-        movies = new ArrayList<Movie>();
-        movies.add(new Movie("Matrix", "https://i.stack.imgur.com/Bzcs0.png"));
-        movies.add(new Movie("X-men - Evolutions", "https://i.stack.imgur.com/Bzcs0.png"));
-        movies.add(new Movie("Deadpool", "https://i.stack.imgur.com/Bzcs0.png"));
+        db = FirebaseFirestore.getInstance();
 
 
-        movieAdapter = new MovieAdapter(MainActivity.this, movies);
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(MainActivity.this,
-                LinearLayoutManager.HORIZONTAL, false);
-        recycleMovie.setLayoutManager(layoutManager);
-        recycleMovie.setAdapter(movieAdapter);
+        recycleMovieAcao = findViewById(R.id.recycleMoviesAcao);
+        recycleMovieAcao.setHasFixedSize(true);
+        recycleMovieAcao.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        moviesAcao = new ArrayList<Movie>();
+        movieAdapterAcao = new MovieAdapter(MainActivity.this, moviesAcao);
+        recycleMovieAcao.setAdapter(movieAdapterAcao);
 
+        recycleMovieAventura = findViewById(R.id.recycleMoviesAventura);
+        recycleMovieAventura.setHasFixedSize(true);
+        recycleMovieAventura.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        moviesAventura = new ArrayList<Movie>();
+        movieAdapterAventura = new MovieAdapter(MainActivity.this, moviesAventura);
+        recycleMovieAventura.setAdapter(movieAdapterAventura);
 
+        EventChangeListenerAcao();
+        EventChangeListenerAventura();
+    }
 
+    private void EventChangeListenerAcao() {
 
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        CollectionReference MoviesRef = db.collection("Movie");
+        MoviesRef.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        Movie movie = document.toObject(Movie.class);
+                        if(document.getString("Type").contains("ação")){
+                            moviesAcao.add(movie);
+                            movieAdapterAcao.notifyDataSetChanged();
+                        }
+                        movieAdapterAcao.notifyDataSetChanged();
+                    }
+                } else {
+                    Log.d("Error task", "Error getting documents: ", task.getException());
+                }
+            }
+        });
+    }
 
+    private void EventChangeListenerAventura() {
 
-        recycleMovie2 = findViewById(R.id.recycleMovies2);
-        movies2 = new ArrayList<Movie>();
-        movies2.add(new Movie("Matrix", "https://i.stack.imgur.com/Bzcs0.png"));
-        movies2.add(new Movie("Matrix", "https://i.stack.imgur.com/Bzcs0.png"));
-        movies2.add(new Movie("Matrix", "https://i.stack.imgur.com/Bzcs0.png"));
-
-
-        movieAdapter2 = new MovieAdapter(MainActivity.this, movies2);
-        RecyclerView.LayoutManager layoutManager2 = new LinearLayoutManager(MainActivity.this,
-                LinearLayoutManager.HORIZONTAL, false);
-        recycleMovie2.setLayoutManager(layoutManager2);
-        recycleMovie2.setAdapter(movieAdapter2);
-
-
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        CollectionReference MoviesRef = db.collection("Movie");
+        MoviesRef.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        Movie movie = document.toObject(Movie.class);
+                        if(document.getString("Type").contains("aventura")){
+                            moviesAventura.add(movie);
+                            movieAdapterAventura.notifyDataSetChanged();
+                        }
+                        movieAdapterAventura.notifyDataSetChanged();
+                    }
+                } else {
+                    Log.d("Error task", "Error getting documents: ", task.getException());
+                }
+            }
+        });
     }
 }
 
-//não hospedamos nenhum dos arquivos nos nossos servidores, apenas o indexamos.

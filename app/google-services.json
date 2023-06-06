@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "679669812798",
+    "project_id": "aldeplaymovies",
+    "storage_bucket": "aldeplaymovies.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:679669812798:android:3f823d1d283144a6dc0b6f",
+        "android_client_info": {
+          "package_name": "com.lifegames.aldeplay"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "679669812798-kkre73us6i7kit6eukcr98sdrphmugmf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.lifegames.aldeplay",
+            "certificate_hash": "fb82f39fae32c8e6d60986ef723d031861094d2d"
+          }
+        },
+        {
+          "client_id": "679669812798-kp356e7pa6a8r50f77idgmgglbsge8eu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAa3igl8EoRQk4tcZRNUlxsMZwFkyYZpdU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "679669812798-kp356e7pa6a8r50f77idgmgglbsge8eu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
