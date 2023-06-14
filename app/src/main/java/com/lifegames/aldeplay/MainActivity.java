@@ -1,38 +1,76 @@
 package com.lifegames.aldeplay;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.SearchView;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+    RecyclerView recycleMovieSearch;
     RecyclerView recycleMovieAcao;
     RecyclerView recycleMovieAventura;
+    RecyclerView recycleMovieFiccao;
+    RecyclerView recycleMovieTerror;
+    RecyclerView recycleMovieDrama;
+
     MovieAdapter movieAdapterAcao;
     MovieAdapter movieAdapterAventura;
+    MovieAdapter movieAdapterFiccao;
+    MovieAdapter movieAdapterTerror;
+    MovieAdapter movieAdapterDrama;
+    MovieAdapterSearch movieAdapterSearch;
+
     ArrayList<Movie> moviesAcao;
     ArrayList<Movie> moviesAventura;
+    ArrayList<Movie> moviesFiccao;
+    ArrayList<Movie> moviesTerror;
+    ArrayList<Movie> moviesDrama;
+    ArrayList<Movie> moviesSearch;
+
+    SearchView searchView;
+    ArrayList<Movie> movies;
     FirebaseFirestore db;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        searchView = findViewById(R.id.searchView);
+        searchView.clearFocus();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filterList(newText);
+                return false;
+            }
+        });
+
         db = FirebaseFirestore.getInstance();
 
+        recycleMovieSearch = findViewById(R.id.recycleMoviesSearch);
+        recycleMovieSearch.setHasFixedSize(true);
+        recycleMovieSearch.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        moviesSearch = new ArrayList<Movie>();
+        movieAdapterSearch = new MovieAdapterSearch(MainActivity.this, moviesSearch);
+        recycleMovieSearch.setAdapter(movieAdapterSearch);
 
-        recycleMovieAcao = findViewById(R.id.recycleMoviesAcao);
+        recycleMovieAcao = findViewById(R.id.recycleMovies);
         recycleMovieAcao.setHasFixedSize(true);
         recycleMovieAcao.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         moviesAcao = new ArrayList<Movie>();
@@ -46,54 +84,151 @@ public class MainActivity extends AppCompatActivity {
         movieAdapterAventura = new MovieAdapter(MainActivity.this, moviesAventura);
         recycleMovieAventura.setAdapter(movieAdapterAventura);
 
+        recycleMovieFiccao = findViewById(R.id.recycleMoviesFiccao);
+        recycleMovieFiccao.setHasFixedSize(true);
+        recycleMovieFiccao.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        moviesFiccao = new ArrayList<Movie>();
+        movieAdapterFiccao = new MovieAdapter(MainActivity.this, moviesFiccao);
+        recycleMovieFiccao.setAdapter(movieAdapterFiccao);
+
+        recycleMovieTerror = findViewById(R.id.recycleMoviesTerror);
+        recycleMovieTerror.setHasFixedSize(true);
+        recycleMovieTerror.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        moviesTerror = new ArrayList<Movie>();
+        movieAdapterTerror = new MovieAdapter(MainActivity.this, moviesTerror);
+        recycleMovieTerror.setAdapter(movieAdapterTerror);
+
+        recycleMovieDrama = findViewById(R.id.recycleMoviesDrama);
+        recycleMovieDrama.setHasFixedSize(true);
+        recycleMovieDrama.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        moviesDrama = new ArrayList<Movie>();
+        movieAdapterDrama = new MovieAdapter(MainActivity.this, moviesDrama);
+        recycleMovieDrama.setAdapter(movieAdapterDrama);
+
         EventChangeListenerAcao();
         EventChangeListenerAventura();
+        EventChangeListenerFiccao();
+        EventChangeListenerTerror();
+        EventChangeListenerDrama();
+        EventChangeListenerSearch();
     }
-
     private void EventChangeListenerAcao() {
-
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         CollectionReference MoviesRef = db.collection("Movie");
-        MoviesRef.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if (task.isSuccessful()) {
-                    for (QueryDocumentSnapshot document : task.getResult()) {
-                        Movie movie = document.toObject(Movie.class);
-                        if(document.getString("Type").contains("ação")){
-                            moviesAcao.add(movie);
-                            movieAdapterAcao.notifyDataSetChanged();
-                        }
+        MoviesRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                for (QueryDocumentSnapshot document : task.getResult()) {
+                    Movie movie = document.toObject(Movie.class);
+                    if(document.getString("Type").contains("ação")){
+                        moviesAcao.add(movie);
                         movieAdapterAcao.notifyDataSetChanged();
                     }
-                } else {
-                    Log.d("Error task", "Error getting documents: ", task.getException());
+                    movieAdapterAcao.notifyDataSetChanged();
                 }
+            } else {
+                Log.d("Error task", "Error getting documents: ", task.getException());
             }
         });
     }
-
     private void EventChangeListenerAventura() {
-
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         CollectionReference MoviesRef = db.collection("Movie");
-        MoviesRef.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if (task.isSuccessful()) {
-                    for (QueryDocumentSnapshot document : task.getResult()) {
-                        Movie movie = document.toObject(Movie.class);
-                        if(document.getString("Type").contains("aventura")){
-                            moviesAventura.add(movie);
-                            movieAdapterAventura.notifyDataSetChanged();
-                        }
+        MoviesRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                for (QueryDocumentSnapshot document : task.getResult()) {
+                    Movie movie = document.toObject(Movie.class);
+                    if(document.getString("Type").contains("aventura")){
+                        moviesAventura.add(movie);
                         movieAdapterAventura.notifyDataSetChanged();
                     }
-                } else {
-                    Log.d("Error task", "Error getting documents: ", task.getException());
+                    movieAdapterAventura.notifyDataSetChanged();
                 }
+            } else {
+                Log.d("Error task", "Error getting documents: ", task.getException());
             }
         });
+    }
+    private void EventChangeListenerFiccao() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        CollectionReference MoviesRef = db.collection("Movie");
+        MoviesRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                for (QueryDocumentSnapshot document : task.getResult()) {
+                    Movie movie = document.toObject(Movie.class);
+                    if(document.getString("Type").contains("ficção")){
+                        moviesFiccao.add(movie);
+                        movieAdapterFiccao.notifyDataSetChanged();
+                    }
+                    movieAdapterFiccao.notifyDataSetChanged();
+                }
+            } else {
+                Log.d("Error task", "Error getting documents: ", task.getException());
+            }
+        });
+    }
+    private void EventChangeListenerTerror() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        CollectionReference MoviesRef = db.collection("Movie");
+        MoviesRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                for (QueryDocumentSnapshot document : task.getResult()) {
+                    Movie movie = document.toObject(Movie.class);
+                    if(document.getString("Type").contains("terror")){
+                        moviesTerror.add(movie);
+                        movieAdapterTerror.notifyDataSetChanged();
+                    }
+                    movieAdapterTerror.notifyDataSetChanged();
+                }
+            } else {
+                Log.d("Error task", "Error getting documents: ", task.getException());
+            }
+        });
+    }
+    private void EventChangeListenerDrama() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        CollectionReference MoviesRef = db.collection("Movie");
+        MoviesRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                for (QueryDocumentSnapshot document : task.getResult()) {
+                    Movie movie = document.toObject(Movie.class);
+                    if(document.getString("Type").contains("drama")){
+                        moviesDrama.add(movie);
+                        movieAdapterDrama.notifyDataSetChanged();
+                    }
+                    movieAdapterDrama.notifyDataSetChanged();
+                }
+            } else {
+                Log.d("Error task", "Error getting documents: ", task.getException());
+            }
+        });
+    }
+    private void EventChangeListenerSearch() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        Query MoviesRef = db.collection("Movie");
+        MoviesRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                for (QueryDocumentSnapshot document : task.getResult()) {
+                    Movie movie = document.toObject(Movie.class);
+                    moviesSearch.add(movie);
+                    movieAdapterSearch.notifyDataSetChanged();
+                }
+            } else {
+                Log.d("Error task", "Error getting documents: ", task.getException());
+            }
+        });
+    }
+    private void filterList(String text) {
+        List<Movie> filteredList = new ArrayList<>();
+        for(Movie movie : moviesSearch){
+            if(movie.getNameMovie().toLowerCase().contains(text.toLowerCase())){
+                filteredList.add(movie);
+            }
+            if(filteredList.isEmpty()){
+                //isEmpty
+            } else {
+                movieAdapterSearch.setFilteredList(filteredList);
+            }
+        }
     }
 }
 
