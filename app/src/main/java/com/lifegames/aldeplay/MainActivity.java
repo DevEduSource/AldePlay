@@ -8,12 +8,18 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.SearchView;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.initialization.InitializationStatus;
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -23,12 +29,14 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView recycleMovieFiccao;
     RecyclerView recycleMovieTerror;
     RecyclerView recycleMovieDrama;
+    RecyclerView recycleMovieRomance;
 
     MovieAdapter movieAdapterAcao;
     MovieAdapter movieAdapterAventura;
     MovieAdapter movieAdapterFiccao;
     MovieAdapter movieAdapterTerror;
     MovieAdapter movieAdapterDrama;
+    MovieAdapter movieAdapterRomance;
     MovieAdapterSearch movieAdapterSearch;
 
     ArrayList<Movie> moviesAcao;
@@ -36,15 +44,27 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<Movie> moviesFiccao;
     ArrayList<Movie> moviesTerror;
     ArrayList<Movie> moviesDrama;
+    ArrayList<Movie> moviesRomance;
     ArrayList<Movie> moviesSearch;
 
     SearchView searchView;
     ArrayList<Movie> movies;
     FirebaseFirestore db;
+    private AdView mAdView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        MobileAds.initialize(this, new OnInitializationCompleteListener() {
+            @Override
+            public void onInitializationComplete(InitializationStatus initializationStatus) {
+            }
+        });
+
+        mAdView = findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
 
         searchView = findViewById(R.id.searchView);
         searchView.clearFocus();
@@ -105,11 +125,19 @@ public class MainActivity extends AppCompatActivity {
         movieAdapterDrama = new MovieAdapter(MainActivity.this, moviesDrama);
         recycleMovieDrama.setAdapter(movieAdapterDrama);
 
+        recycleMovieRomance = findViewById(R.id.recycleMoviesRomance);
+        recycleMovieRomance.setHasFixedSize(true);
+        recycleMovieRomance.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        moviesRomance = new ArrayList<Movie>();
+        movieAdapterRomance = new MovieAdapter(MainActivity.this, moviesRomance);
+        recycleMovieRomance.setAdapter(movieAdapterRomance);
+
         EventChangeListenerAcao();
         EventChangeListenerAventura();
         EventChangeListenerFiccao();
         EventChangeListenerTerror();
         EventChangeListenerDrama();
+        EventChangeListenerRomance();
         EventChangeListenerSearch();
     }
     private void EventChangeListenerAcao() {
@@ -196,6 +224,24 @@ public class MainActivity extends AppCompatActivity {
                         movieAdapterDrama.notifyDataSetChanged();
                     }
                     movieAdapterDrama.notifyDataSetChanged();
+                }
+            } else {
+                Log.d("Error task", "Error getting documents: ", task.getException());
+            }
+        });
+    }
+    private void EventChangeListenerRomance() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        CollectionReference MoviesRef = db.collection("Movie");
+        MoviesRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                for (QueryDocumentSnapshot document : task.getResult()) {
+                    Movie movie = document.toObject(Movie.class);
+                    if(document.getString("Type").contains("romance")){
+                        moviesRomance.add(movie);
+                        movieAdapterRomance.notifyDataSetChanged();
+                    }
+                    movieAdapterRomance.notifyDataSetChanged();
                 }
             } else {
                 Log.d("Error task", "Error getting documents: ", task.getException());
